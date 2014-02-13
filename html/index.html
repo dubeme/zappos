@@ -13,7 +13,7 @@
         .row {
             width: 360px;
             margin: 16px auto;
-            font-size: 1.25em;
+            font-size: 1.125em;
         }
 
         .hidden {
@@ -53,11 +53,11 @@
 </head>
 <body ng-controller="ZapposController">
     <form ng-submit="formSubmitted()" class="row">
-        <input type="text" name="query" value="" placeholder="Enter product name or ID" class="row" />
-        <input type="submit" name="search" value="Search" class="row {{searchBtnClass}}" />
+        <input type="{{ibx_type}}" name="query" ng-model="ibx_value" placeholder="{{ibx_text}}" class="row" />
+        <input type="submit" name="search" value="{{btn_text}}" class="row {{searchBtnClass}}" />
     </form>
     <h6 class="row">{{search_status}}</h6>
-    <ul>
+    <ul class="{{plClass}}">
         <li class="result row {{product.visibility}}" ng-repeat="product in products" ng-click="productSelected(this)">
             <img class="lefty" src="{{product.img}}" alt="{{product.name}}" title="{{product.name}}" height="64" />
             <div class="lefty detail">
@@ -73,22 +73,52 @@
         function ZapposController($scope) {
             var canSubmit = true;
             var http = new XMLHttpRequest();
+            var itemSelected = false;
+
+            $scope.ibx_value = "";
+            $scope.ibx_text = "Enter product name or ID";
+            $scope.ibx_type = "text";
+            $scope.btn_text = "Search";
+
 
             $scope.search_status = "";
             $scope.products = new Array();
-            $scope.plClass = 'visible';
+            $scope.plClass = '';
             $scope.searchBtnClass = 'visible';
+
             $scope.productSelected = function (item) {
-                $scope.plClass = 'hidden';
-                $scope.search_status = "You selected - " + item.product.name;
+                $scope.plClass = 'row';
+                $scope.search_status = "";//"You selected - " + item.product.name;
                 $scope.selectedItem = item.product;
                 $scope.products.forEach(function (item) {
                     item.visibility = 'hidden';
                 });
                 item.product.visibility = 'visible';
+                $scope.ibx_value = "";
+                $scope.ibx_text = "Enter your email";
+                $scope.ibx_type = "email";
+                $scope.btn_text = "Subscribe for deals over 20%";
+                itemSelected = true;
             };
 
             $scope.formSubmitted = function () {
+                if (itemSelected) {
+                    alert("Thanks for subscibing. We will email you at [" + form1.query.value + "] when there is a 20% or more deals on " + $scope.selectedItem.name);
+
+                    canSubmit = true;
+                    http = new XMLHttpRequest();
+                    itemSelected = false;
+
+                    $scope.ibx_value = "";
+                    $scope.ibx_text = "Enter product name or ID";
+                    $scope.ibx_type = "text";
+                    $scope.btn_text = "Search";
+                    $scope.search_status = "";
+                    $scope.products = new Array();
+                    $scope.plClass = '';
+                    $scope.searchBtnClass = 'visible';
+                    return;
+                }
 
                 if (!canSubmit) {
                     alert("Easy buddy, I am already doing a search");
