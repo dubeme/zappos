@@ -19,6 +19,7 @@
         .hidden {
             visibility: collapse;
         }
+
         .visible {
             visibility: visible;
         }
@@ -36,7 +37,7 @@
     </style>
 </head>
 <body ng-controller="ZapposController">
-    <form action="/" method="post" class="row">
+    <form ng-submit="formSubmitted()" class="row">
         <p class="row">Select type of search:</p>
         <select name="opt" class="row">
             <option value="0">Product name</option>
@@ -53,18 +54,18 @@
     </ul>
     <script>
         var form1 = document.getElementsByTagName("form")[0];
-        var scope = null;
 
-        form1.onsubmit = function () {
+        //form1.onsubmit = function () {
+        function formSubmitted(scope) {
             if (form1.opt.value == 0) {
-                findProductsByName(form1.query.value);
+                findProductsByName(form1.query.value, scope);
             } else {
-                getProductDetails(form1.query.value);
+                getProductDetails(form1.query.value, scope);
             }
             return false;
         }
 
-        function getProductDetails(id) {
+        function getProductDetails(id, scope) {
             var http = new XMLHttpRequest();
             http.open("POST", "/product", true);
             http.setRequestHeader("Content-type", "text/json");
@@ -78,7 +79,7 @@
             http.send(JSON.stringify({ query: id }));
         }
 
-        function findProductsByName(name) {
+        function findProductsByName(name, scope) {
             var http = new XMLHttpRequest();
             http.open("POST", "/search", true);
             http.setRequestHeader("Content-type", "text/json");
@@ -94,19 +95,46 @@
 
         function ZapposController($scope) {
             scope = $scope;
-            $scope.products = [
+            $scope.products = new Array();
+            /*[
             { img: "", name: "Name" },
             { img: "", name: "Name" },
             { img: "", name: "Name" },
             { img: "", name: "Name" },
-            { img: "", name: "Name" },];
+            { img: "", name: "Name" }, ];
+            */
             $scope.plClass = 'visible';
-            $scope.productSelected = function (item)
-            {
+            $scope.productSelected = function (item) {
                 console.log(item.product.name);
             };
-            /* $scope.plClass = null;
-            $scope.plClass = null;*/
+
+            $scope.formSubmitted = function () {
+                //formSubmitted($scope.products);
+                alert("Ass");
+                if (form1.opt.value == 0) {
+                    var http = new XMLHttpRequest();
+                    http.open("POST", "/search", true);
+                    http.setRequestHeader("Content-type", "text/json");
+
+                    http.onreadystatechange = function () {
+                        if (http.readyState == 4 && http.status == 200) {
+                            $scope.products = JSON.parse(http.responseText);
+                        }
+                    }
+                    http.send(JSON.stringify({ query: form1.query.value }));
+                } else {
+                    var http = new XMLHttpRequest();
+                    http.open("POST", "/product", true);
+                    http.setRequestHeader("Content-type", "text/json");
+
+                    http.onreadystatechange = function () {
+                        if (http.readyState == 4 && http.status == 200) {
+                            $scope.products = JSON.parse(http.responseText);
+                        }
+                    }
+                    http.send(JSON.stringify({ query: form1.query.value }));
+                }
+            };
         }
     </script>
 </body>
