@@ -1,0 +1,14 @@
+{
+  "name": "zappos",
+  "version": "0.0.0",
+  "description": "zappos",
+  "main": "server.js",
+  "author": {
+    "name": "dubem",
+    "email": ""
+  },
+  "dependencies": {
+    "express": "~3.4.8",
+    "jade": "~1.1.5"
+  }
+}

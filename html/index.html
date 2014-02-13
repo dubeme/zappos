@@ -1,0 +1,113 @@
+﻿<!Doctype html>
+<html ng-app>
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.12/angular.min.js"></script>
+    <title>Zappos Notifier</title>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            border: 0;
+        }
+
+        .row {
+            width: 360px;
+            margin: 16px auto;
+            font-size: 1.25em;
+        }
+
+        .hidden {
+            visibility: collapse;
+        }
+        .visible {
+            visibility: visible;
+        }
+
+        .result {
+            width: 114px;
+            height: 114px;
+            float: left;
+            margin: 4px 6px 2px 0px;
+        }
+
+        ul {
+            list-style: none;
+        }
+    </style>
+</head>
+<body ng-controller="ZapposController">
+    <form action="/" method="post" class="row">
+        <p class="row">Select type of search:</p>
+        <select name="opt" class="row">
+            <option value="0">Product name</option>
+            <option value="1">Product ID</option>
+        </select>
+        <input type="text" name="query" value="" placeholder="Enter product name or ID" class="row" />
+        <input type="submit" name="search" value="Search" class="row" />
+    </form>
+    <h1>{{search_message}}</h1>
+    <ul class="{{plClass}}">
+        <li class="result" ng-repeat="product in products" ng-click="productSelected(this)">
+            <img src="{{product.img}}" alt="{{product.name}}" />
+        </li>
+    </ul>
+    <script>
+        var form1 = document.getElementsByTagName("form")[0];
+        var scope = null;
+
+        form1.onsubmit = function () {
+            if (form1.opt.value == 0) {
+                findProductsByName(form1.query.value);
+            } else {
+                getProductDetails(form1.query.value);
+            }
+            return false;
+        }
+
+        function getProductDetails(id) {
+            var http = new XMLHttpRequest();
+            http.open("POST", "/product", true);
+            http.setRequestHeader("Content-type", "text/json");
+
+            http.onreadystatechange = function () {
+                if (http.readyState == 4 && http.status == 200) {
+                    console.log(JSON.parse(http.responseText));
+                    scope.products = JSON.parse(http.responseText);
+                }
+            }
+            http.send(JSON.stringify({ query: id }));
+        }
+
+        function findProductsByName(name) {
+            var http = new XMLHttpRequest();
+            http.open("POST", "/search", true);
+            http.setRequestHeader("Content-type", "text/json");
+
+            http.onreadystatechange = function () {
+                if (http.readyState == 4 && http.status == 200) {
+                    console.log(JSON.parse(http.responseText));
+                    scope.products = JSON.parse(http.responseText);
+                }
+            }
+            http.send(JSON.stringify({ query: name }));
+        }
+
+        function ZapposController($scope) {
+            scope = $scope;
+            $scope.products = [
+            { img: "", name: "Name" },
+            { img: "", name: "Name" },
+            { img: "", name: "Name" },
+            { img: "", name: "Name" },
+            { img: "", name: "Name" },];
+            $scope.plClass = 'visible';
+            $scope.productSelected = function (item)
+            {
+                console.log(item.product.name);
+            };
+            /* $scope.plClass = null;
+            $scope.plClass = null;*/
+        }
+    </script>
+</body>
+</html>
