@@ -103,6 +103,11 @@
 
             $scope.formSubmitted = function () {
                 if (itemSelected) {
+                    if (form1.query.value.length < 1) {
+                        alert("Please provide an email");
+                        return;
+                    }
+
                     alert("Thanks for subscibing. We will email you at [" + form1.query.value + "] when there is a 20% or more deals on " + $scope.selectedItem.name);
 
                     canSubmit = true;
