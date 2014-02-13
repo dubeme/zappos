@@ -4,7 +4,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.12/angular.min.js"></script>
     <title>Zappos Notifier</title>
     <style>
-        body {
+        body,p {
             padding: 0;
             margin: 0;
             border: 0;
@@ -24,117 +24,114 @@
             visibility: visible;
         }
 
-        .result {
-            width: 114px;
-            height: 114px;
+        .lefty {
             float: left;
-            margin: 4px 6px 2px 0px;
+        }
+
+        .result {
+            float: left;
+            height: 64px;
+            margin: 2px;
+            border: 2px solid red;
+            font-size: 0.8em;
+            line-height: 0.85em;
+        }
+
+        .result p {
+            margin:2px;
+            overflow:hidden;
         }
 
         ul {
             list-style: none;
         }
+
+        .detail {
+            width: 256px;
+        }
     </style>
 </head>
 <body ng-controller="ZapposController">
     <form ng-submit="formSubmitted()" class="row">
-        <p class="row">Select type of search:</p>
-        <select name="opt" class="row">
-            <option value="0">Product name</option>
-            <option value="1">Product ID</option>
-        </select>
         <input type="text" name="query" value="" placeholder="Enter product name or ID" class="row" />
-        <input type="submit" name="search" value="Search" class="row" />
+        <input type="submit" name="search" value="Search" class="row {{searchBtnClass}}" />
     </form>
-    <h1>{{search_message}}</h1>
+    <h6 class="row">{{search_status}}</h6>
     <ul class="{{plClass}}">
-        <li class="result" ng-repeat="product in products" ng-click="productSelected(this)">
-            <img src="{{product.img}}" alt="{{product.name}}" />
+        <li class="result row" ng-repeat="product in products" ng-click="productSelected(this)">
+            <img class="lefty" src="{{product.img}}" alt="{{product.name}}" title="{{product.name}}" height="64" />
+            <div class="lefty detail">
+                <p>{{product.name}}</p><br />
+                <p>{{product.price}}</p>
+            </div>
         </li>
     </ul>
+
+    <div ng-model="selectedItem">
+        <img class="lefty" src="{{selectedItem.img}}" alt="{{selectedItem.name}}" title="{{selectedItem.name}}" height="64" />
+        <div class="lefty detail">
+            <p>{{selectedItem.name}}</p><br />
+            <p>{{selectedItem.price}}</p>
+        </div>
+    </div>
+
     <script>
         var form1 = document.getElementsByTagName("form")[0];
 
-        //form1.onsubmit = function () {
-        function formSubmitted(scope) {
-            if (form1.opt.value == 0) {
-                findProductsByName(form1.query.value, scope);
-            } else {
-                getProductDetails(form1.query.value, scope);
-            }
-            return false;
-        }
-
-        function getProductDetails(id, scope) {
-            var http = new XMLHttpRequest();
-            http.open("POST", "/product", true);
-            http.setRequestHeader("Content-type", "text/json");
-
-            http.onreadystatechange = function () {
-                if (http.readyState == 4 && http.status == 200) {
-                    console.log(JSON.parse(http.responseText));
-                    scope.products = JSON.parse(http.responseText);
-                }
-            }
-            http.send(JSON.stringify({ query: id }));
-        }
-
-        function findProductsByName(name, scope) {
-            var http = new XMLHttpRequest();
-            http.open("POST", "/search", true);
-            http.setRequestHeader("Content-type", "text/json");
-
-            http.onreadystatechange = function () {
-                if (http.readyState == 4 && http.status == 200) {
-                    console.log(JSON.parse(http.responseText));
-                    scope.products = JSON.parse(http.responseText);
-                }
-            }
-            http.send(JSON.stringify({ query: name }));
-        }
-
         function ZapposController($scope) {
-            scope = $scope;
+            var canSubmit = true;
+            var http = new XMLHttpRequest();
+
+            $scope.search_status = "";
             $scope.products = new Array();
-            /*[
-            { img: "", name: "Name" },
-            { img: "", name: "Name" },
-            { img: "", name: "Name" },
-            { img: "", name: "Name" },
-            { img: "", name: "Name" }, ];
-            */
             $scope.plClass = 'visible';
+            $scope.searchBtnClass = 'visible';
             $scope.productSelected = function (item) {
-                console.log(item.product.name);
+                $scope.plClass = 'hidden';
+                $scope.search_status = "You selected - " + item.product.name;
+                $scope.selectedItem = item.product;
             };
 
             $scope.formSubmitted = function () {
-                //formSubmitted($scope.products);
-                alert("Ass");
-                if (form1.opt.value == 0) {
-                    var http = new XMLHttpRequest();
-                    http.open("POST", "/search", true);
-                    http.setRequestHeader("Content-type", "text/json");
 
-                    http.onreadystatechange = function () {
-                        if (http.readyState == 4 && http.status == 200) {
-                            $scope.products = JSON.parse(http.responseText);
-                        }
-                    }
-                    http.send(JSON.stringify({ query: form1.query.value }));
-                } else {
-                    var http = new XMLHttpRequest();
-                    http.open("POST", "/product", true);
-                    http.setRequestHeader("Content-type", "text/json");
-
-                    http.onreadystatechange = function () {
-                        if (http.readyState == 4 && http.status == 200) {
-                            $scope.products = JSON.parse(http.responseText);
-                        }
-                    }
-                    http.send(JSON.stringify({ query: form1.query.value }));
+                if (!canSubmit) {
+                    alert("Easy buddy, I am already doing a search");
+                    return;
                 }
+
+                $scope.searchBtnClass = 'hidden';
+                $scope.search_status = "Searching for " + form1.query.value + " ...";
+                http.open("POST", "/search", true);
+                http.setRequestHeader("Content-type", "text/json");
+                http.onreadystatechange = gotResponse;
+                http.send(JSON.stringify({ query: form1.query.value }));
+                canSubmit = false;
             };
+
+            function gotResponse() {
+                if (http.readyState == 4) {
+                    canSubmit = true;
+                    $scope.searchBtnClass = 'visible';
+
+                    $scope.$apply();
+                    if (http.status == 200) {
+                        $scope.search_status = "Done searching for " + form1.query.value + " ...";
+                        $scope.products = JSON.parse(http.responseText);
+
+                        $scope.$apply();
+
+                        if (!($scope.products.length > 0)) {
+                            $scope.search_status = "Sorry but no result was found ...";
+                        } else {
+                            $scope.search_status = "Woohoo found " + $scope.products.length + " result. Please Select 1 product";
+                        }
+                    } else {
+                        $scope.search_status = "Shhhhhhh, please don't tell my boss, but it look like I screwed up on my own side.";
+                    }
+
+                    $scope.$apply();
+                }
+            }
         }
     </script>
 </body>

@@ -43,7 +43,7 @@ app.post('/product', function (req, res) {
                     });
                 });
             } catch (ex) { }
-            res.send(result);
+            res.send(200,result);
         });
     });
 
@@ -71,7 +71,7 @@ app.post('/search', function (req, res) {
                     });
                 });
             } catch (ex) { }
-            res.send(result);
+            res.send(200,result);
         });
     });
 });
